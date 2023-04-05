@@ -1,0 +1,11 @@
+We want to have for the week 06-01-2020 - 10-01-2020:
+	Implement start menu
+	Implement settings menu
+	Store the progress of a player in the database.
+	Implement a scoreboard to show the goal to player
+	Implement and show high scores of the top 10 players
+	Setup the database on TU Delft server
+If we have time left:
+	Redo the design to fit the theme of our game
+	Rewrite code to include design patterns
+	

@@ -1,0 +1,148 @@
+import com.github.spotbugs.SpotBugsTask
+
+buildscript {
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        jcenter()
+        google()
+    }
+    dependencies {
+//        compile 'mysql:mysql-connector-java:5.1.+'
+//        compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.48'
+        classpath group: 'gradle.plugin.com.github.spotbugs', name: 'spotbugs-gradle-plugin', version: '1.6.5'
+    }
+}
+
+allprojects {
+    apply plugin: "java-library"
+
+    apply plugin: 'idea'
+
+    group 'nl.tudelft.cse.sem.template'
+    version '1.0-SNAPSHOT'
+
+    ext {
+        appName = "laserreflection"
+        gdxVersion = '1.9.10'
+        roboVMVersion = '2.3.7'
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+        google()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    
+    dependencies {
+        api "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    }
+}
+
+project(":desktop") {
+    dependencies {
+        implementation project(":core")
+    }
+}
+
+project(":core") {
+    // Test coverage
+    apply plugin: 'jacoco'
+
+    // Code style
+    apply plugin: 'checkstyle'
+
+    // PMD
+    apply plugin: 'pmd'
+
+    // FindBugs / SpotBugs
+    apply plugin: "com.github.spotbugs"
+
+    test {
+        useJUnitPlatform()
+
+        jacoco {
+            enabled = true
+        }
+    }
+
+    jacocoTestCoverageVerification {
+        violationRules {
+            rule {
+                enabled = true
+                element = 'CLASS'
+                excludes = [
+                        'screens.*',
+                        'game.LaserReflection',
+                        'objects.Laser',
+                        'objects.Laser.Direction'
+                ]
+
+                limit {
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.5
+                }
+            }
+        }
+    }
+
+    jacocoTestReport {
+        reports {
+            csv.enabled true
+        }
+
+        afterEvaluate {
+            classDirectories = files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        '**/screens/*',
+                        '**/LaserReflection.*'
+                ])
+            })
+        }
+    }
+
+    checkstyle {
+        toolVersion "8.25"
+        configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+    }
+
+    pmd {
+        incrementalAnalysis = true
+    }
+
+    spotbugs {
+        toolVersion = '4.0.0-beta4'
+        sourceSets = [sourceSets.main]
+        ignoreFailures = false
+        effort = "default"
+        reportLevel = "high"
+        visitors = ["FindSqlInjection", "SwitchFallthrough"]
+        excludeFilter = file("$rootProject.projectDir/config/spotbugs/excludeFilter.xml")
+    }
+
+    tasks.withType(SpotBugsTask) {
+        reports.xml.enabled = false
+        reports.html.enabled = true
+    }
+
+    dependencies {
+        api "com.badlogicgames.gdx:gdx:$gdxVersion"
+        compile 'mysql:mysql-connector-java:5.1.+'
+        compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+
+        testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+        spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.7.1'
+        compileOnly group: 'com.github.spotbugs', name: 'spotbugs-annotations', version: '3.1.8'
+        testCompile group: 'org.mockito', name: 'mockito-core', version: '3.2.0'
+        compile "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+    }
+}

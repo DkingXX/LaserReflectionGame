@@ -1,0 +1,10 @@
+What we want to have in the prototype:
+    Login screen
+    Start at the first level
+    In the level we have a laser and an endpoint.
+    Mirrors can be placed to reflect the laser.
+    If the laser reaches the endpoint the player wins.
+    The player is able to log out.
+If we have time left:
+    Multiple levels
+    Level select screen
